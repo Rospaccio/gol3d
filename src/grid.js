@@ -1,5 +1,4 @@
-import * as THREE from "../node_modules/three/src/Three"
-import { scene } from "./scene"
+import * as THREE from "../node_modules/three/build/three.module"
 
 class Grid {
 
@@ -67,7 +66,6 @@ class Grid {
     }
 
     addGridTo(scene) {
-        console.log("Adding grid", this.xLines.length, this.yLines.length);
         for (var i = 0; i < this.xLines.length; i++) {
             scene.add(this.xLines[i]);
             scene.add(this.yLines[i]);

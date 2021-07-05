@@ -1,13 +1,10 @@
-import * as THREE from "../node_modules/three/src/Three"
+import * as THREE from "../node_modules/three/build/three.module"
 import { scene } from "./scene";
 
 const lights = {
 
     init: function (scene) {
-        //scene.fog = new THREE.Fog(0x111111, 4, 2500);
-
-        var ambientLight = new THREE.AmbientLight(0xffffff);
-        scene.add(ambientLight);
+        scene.fog = new THREE.Fog(0x111111, 4, 2500);
 
         // Lights
         var ambientLight = new THREE.AmbientLight(0x404040);
