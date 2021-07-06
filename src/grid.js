@@ -12,6 +12,7 @@ class Grid {
         this.material = new THREE.LineBasicMaterial({ color: 0x000000 });
 
         this.buildLineGrid();
+        this.plane = this.buildPlane();
     }
 
     buildLineGrid() {
@@ -65,7 +66,18 @@ class Grid {
         return [plusLine, minusLine];
     }
 
+    buildPlane() {
+        const planeMaterial = new THREE.MeshPhongMaterial({color: 0x123456, opacity: 0.0, transparent: true});
+        const planeWidth = this.limit * 2;
+        const planeGeom = new THREE.PlaneBufferGeometry(planeWidth, planeWidth);
+        const plane = new THREE.Mesh(planeGeom, planeMaterial);
+        return plane;
+    }
+
     addGridTo(scene) {
+        
+        scene.add(this.plane);
+
         for (var i = 0; i < this.xLines.length; i++) {
             scene.add(this.xLines[i]);
             scene.add(this.yLines[i]);

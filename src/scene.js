@@ -1,26 +1,26 @@
 import * as THREE from "../node_modules/three/build/three.module"
 import { TrackballControls } from "../lib/TrackballControls.js";
-// 
-const scene = new THREE.Scene();
-let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
 
-camera.position.z = 15;
-camera.position.x = -5;
-camera.position.y = -5;
-// camera.lookAt(0, 0, 0);
+class GoL3DScene {
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
+    constructor(options) {
+        this.scene = new THREE.Scene();
+        this.renderer = new THREE.WebGL1Renderer();
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
 
-renderer.setClearColor(0xeeeeee, 1.0);
+        this.camera.position.z = 15;
+        this.camera.position.x = -5;
+        this.camera.position.y = -5;
 
-// const controls = {update: function(){}};
-// let controls = new TrackballControls(camera, renderer.domElement);
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setClearColor(0xeeeeee, 1.0);
+    }
 
-// controls.rotateSpeed = 1.0;
-// controls.zoomSpeed = 1.2;
-// controls.panSpeed = 0.8;
+    addLights(lights){
+        lights.forEach(element => {
+            this.scene.add(element);
+        });
+    }
+};
 
-// controls.keys = ['KeyA', 'KeyS', 'KeyD'];
-
-export { scene, renderer, camera };
+export { GoL3DScene };

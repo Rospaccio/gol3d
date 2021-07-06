@@ -1,26 +1,21 @@
 import * as THREE from "../node_modules/three/build/three.module"
-import { scene } from "./scene";
 
-const lights = {
+class GoL3DLights {
+    constructor(options){
+        this.fog = new THREE.Fog(0x111111, 4, 2500);
+        this.lights = [];
 
-    init: function (scene) {
-        scene.fog = new THREE.Fog(0x111111, 4, 2500);
+        let ambientLight = new THREE.AmbientLight(0x404040);
+        this.lights.push(ambientLight);
 
-        // Lights
-        var ambientLight = new THREE.AmbientLight(0x404040);
-        scene.add(ambientLight);
-
-        var light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
+        let light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
         light.position.set(200, 400, 500);
+        this.lights.push(light);
 
         var light2 = new THREE.DirectionalLight(0xFFFFFF, .6);
         light2.position.set(-400, 200, -300);
-
-        scene.add(light);
-        scene.add(light2);
+        this.lights.push(light2);
     }
 }
 
-lights.init(scene);
-
-export { lights };
+export { GoL3DLights };
