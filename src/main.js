@@ -43,7 +43,7 @@ const animate = function () {
     controls.update();
 
     raycaster.setFromCamera(mouse, camera);
-
+    // lifeEnv.evolveNextGeneration();
     renderer.render(scene, camera);
 };
 
@@ -52,7 +52,6 @@ animate();
 function onMouseDown() {
 
     let intersections = raycaster.intersectObjects([grid.plane], false);
-    console.log("Intersections: ", intersections);
 
     if (intersections.length > 0) {
         lifeEnv.toggleCellAt(intersections[0].point);
