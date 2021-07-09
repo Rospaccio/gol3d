@@ -2,7 +2,7 @@ import * as THREE from "../node_modules/three/build/three.module"
 
 const DELTA_Z = 0.001;
 // Simulation step in milliseconds
-const DELTA = 1000;
+const DELTA = 200;
 
 class LifeEnvironment {
 
@@ -78,9 +78,6 @@ class LifeEnvironment {
     }
 
     evolveNextGeneration() {
-
-        if (!this.clock.running)
-            this.clock.start();
 
         let tick = this.clock.getElapsedTime() * 1000;
         if (tick > this.lastGenerationTick + DELTA) {
@@ -166,7 +163,6 @@ class LifeEnvironment {
                 if(this.cellAt(cell.i + x, cell.j + y))
                     continue;
                 if(spawnLocationsChecked[[cell.i + x, cell.j + y]]){
-                    console.log("checked");
                     continue;
                 }
                 let live = this.countLiveNeighborsAt(cell.i + x, cell.j + y);
@@ -179,6 +175,16 @@ class LifeEnvironment {
         return spawns;
     }
 
+    toggleRun() {
+        if(this.clock.running){
+            this.clock.stop();
+        }
+        else{
+            this.clock = new THREE.Clock();
+            this.lastGenerationTick = 0;
+            this.clock.start();
+        }
+    }
 }
 
 export { LifeEnvironment };

@@ -13,6 +13,7 @@
   "author": "merka@codevomit.xyz",
   "license": "GPL-3.0-or-later",
   "dependencies": {
+    "dat.gui": "^0.7.7",
     "three": "^0.130.0"
   },
   "devDependencies": {

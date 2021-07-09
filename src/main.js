@@ -4,6 +4,8 @@ import { Grid } from "./grid";
 import { TrackballControls } from "../lib/TrackballControls.js";
 import { GoL3DLights } from "./lights";
 import { LifeEnvironment } from "./lifeenv";
+import * as dat from "../node_modules/dat.gui/build/dat.gui.module"
+import { LifeGui } from "./gui";
 
 const golScene = new GoL3DScene();
 const golLights = new GoL3DLights();
@@ -20,12 +22,12 @@ const CUBE_STEP = 1;
 const grid = new Grid(CUBE_STEP, 100);
 grid.addGridTo(scene);
 
-const geometry = new THREE.BoxGeometry();
-const cMaterial = new THREE.MeshPhongMaterial({ color: 0x22ff44 });
-const cube = new THREE.Mesh(geometry, cMaterial);
-cube.position.x = .5;
-cube.position.y = .5;
-scene.add(cube);
+// const geometry = new THREE.BoxGeometry();
+// const cMaterial = new THREE.MeshPhongMaterial({ color: 0x22ff44 });
+// const cube = new THREE.Mesh(geometry, cMaterial);
+// cube.position.x = .5;
+// cube.position.y = .5;
+// scene.add(cube);
 
 let controls = new TrackballControls(camera, renderer.domElement);
 
@@ -37,7 +39,13 @@ document.addEventListener('mousedown', onMouseDown, false);
 
 const lifeEnv = new LifeEnvironment(scene, CUBE_STEP);
 
-
+var running = false;
+const gui = new LifeGui({
+    toggleRun: function () {
+        running = !running;
+        lifeEnv.toggleRun();
+    }
+});
 
 const animate = function () {
 
@@ -45,7 +53,9 @@ const animate = function () {
     controls.update();
 
     raycaster.setFromCamera(mouse, camera);
-    lifeEnv.evolveNextGeneration();
+    if (running) {
+        lifeEnv.evolveNextGeneration();
+    }
     renderer.render(scene, camera);
 };
 
