@@ -37,13 +37,15 @@ document.addEventListener('mousedown', onMouseDown, false);
 
 const lifeEnv = new LifeEnvironment(scene, CUBE_STEP);
 
+
+
 const animate = function () {
 
     requestAnimationFrame(animate);
     controls.update();
 
     raycaster.setFromCamera(mouse, camera);
-    // lifeEnv.evolveNextGeneration();
+    lifeEnv.evolveNextGeneration();
     renderer.render(scene, camera);
 };
 

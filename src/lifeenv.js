@@ -1,8 +1,8 @@
 import * as THREE from "../node_modules/three/build/three.module"
 
 const DELTA_Z = 0.001;
-// Simulation step in seconds
-const DELTA = 5;
+// Simulation step in milliseconds
+const DELTA = 1000;
 
 class LifeEnvironment {
 
@@ -35,47 +35,35 @@ class LifeEnvironment {
             this.resetCell(existing);
         }
         else {
-            let cubePosition = new THREE.Vector3(
-                (this.cubeStep / 2) + (this.cubeStep * cellOrdinalX),
-                (this.cubeStep / 2) + (this.cubeStep * cellOrdinalY),
-                0);
-
-            let geom = new THREE.BoxGeometry(this.cubeStep);
-            let cubeMesh = new THREE.Mesh(geom, this.cubeMaterial);
-            cubeMesh.position.set(cubePosition.x, cubePosition.y, cubePosition.z);
-            this.scene.add(cubeMesh);
-
-            let cell = { i: cellOrdinalX, j: cellOrdinalY, cube: cubeMesh };
+            let cell = this.createCell(cellOrdinalX, cellOrdinalY);
             this.setCellAt(cellOrdinalX, cellOrdinalY, cell);
-
-            // this.cubes.push(cubeMesh);
-            // this.cells.push({i: cellOrdinalX, j: cellOrdinalY});
         }
     }
 
-    
+    createCell(cellOrdinalX, cellOrdinalY) {
+        let cubePosition = new THREE.Vector3(
+            (this.cubeStep / 2) + (this.cubeStep * cellOrdinalX),
+            (this.cubeStep / 2) + (this.cubeStep * cellOrdinalY),
+            0);
+
+        let geom = new THREE.BoxGeometry(this.cubeStep);
+        let cubeMesh = new THREE.Mesh(geom, this.cubeMaterial);
+        cubeMesh.position.set(cubePosition.x, cubePosition.y, cubePosition.z);
+        this.scene.add(cubeMesh);
+
+        let cell = { i: cellOrdinalX, j: cellOrdinalY, cube: cubeMesh, type: 'cell' };
+        return cell;
+    }
+
     cellAt(i, j) {
 
         return this.cells[[i, j]];
-
-        // if(this.cells[i] && this.cells[i][j])
-        //     return this.cells[i][j];
-        // return undefined;
     }
 
     setCellAt(i, j, cell) {
 
         this.cells[[i, j]] = cell;
         this.cells.length += 1;
-
-        // if (!this.cells[i]) {
-        //     this.cells[i] = [];
-        // }
-        // if(!this.cells[i][j]){
-        //     this.cells[i][j] = null;
-        // }
-
-        // this.cells[i][j] = cell;
     }
 
     resetCell(cell) {
@@ -86,7 +74,6 @@ class LifeEnvironment {
         this.scene.remove(cell.cube);
         delete this.cells[[cell.i, cell.j]];
         this.cells.length -= 1;
-        // this.cells[cell.i][cell.j] = null;
         cell.alreadyRemoved = true;
     }
 
@@ -95,7 +82,7 @@ class LifeEnvironment {
         if (!this.clock.running)
             this.clock.start();
 
-        let tick = this.clock.getElapsedTime();
+        let tick = this.clock.getElapsedTime() * 1000;
         if (tick > this.lastGenerationTick + DELTA) {
 
             this.lastGenerationTick = this.lastGenerationTick + DELTA;
@@ -105,43 +92,91 @@ class LifeEnvironment {
 
     evolveNextGenerationStep() {
 
-        let survivors = [];
+        let spawns = [];
         let aboutToDie = [];
+        let spawnLocationsChecked = {};
 
-        let flattenedCells = [].concat(...this.cells);
-        console.log('flat: ', flattenedCells);
-        for (let c = 0; c < flattenedCells.length; c++) {
-            console.log("flattened cell nr.", c, flattenedCells[c]);
-            if (flattenedCells[c] && this.shouldDie(flattenedCells[c])) {
-                aboutToDie.push(flattenedCells[c]);
+        for (let key in this.cells) {
+            try {
+                let maybeCell = this.cells[key];
+                if (maybeCell.type !== 'cell')
+                    continue;
+                if (this.shouldDie(maybeCell)) {
+                    aboutToDie.push(maybeCell);
+                }
+
+                let newSpawns = this.checkNeighborsForSpawn(maybeCell, spawnLocationsChecked);
+                spawns = spawns.concat(newSpawns);
+            }
+            catch (e) {
+                console.log(e);
+                continue;
             }
         }
 
-        //  let newSpawns = this.checkNeighborsForSpawn(cell);
-        //  survivors.join(newSpawns);
-
         for (let i = 0; i < aboutToDie.length; i++) {
             this.resetCell(aboutToDie[i]);
+        }
+        for(let i = 0; i < spawns.length; i++){
+            let newCell = this.createCell(...spawns[i]);
+            this.setCellAt(newCell.i, newCell.j, newCell);
         }
     }
 
     shouldDie(cell) {
 
-        console.log("cell: ", cell);
-
-        if (!cell)
+        if (!cell || !cell.type === 'cell')
             return false;
+
+        let liveNeighborsCount = this.countLiveNeighborsAt(cell.i, cell.j);
+        return liveNeighborsCount < 2 || liveNeighborsCount > 3;
+    }
+
+    shouldSpawnAt(i, j){
+        let liveNeighborsCount = this.countLiveNeighborsAt(i, j);
+        return liveNeighborsCount === 3;
+    }
+
+    countLiveNeighborsAt(i, j){
 
         let liveNeighborsCount = 0;
 
-        for (let x = -1; x++; x <= 1) {
-            for (let y = 1; y--; y >= -1) {
-                if (this.cellAt(cell.i + x, cell.j + y)) {
+        for (let x = -1; x <= 1; x++) {
+            for (let y = 1; y >= -1; y--) {
+                if (x === 0 && y === 0)
+                    continue;
+                if (this.cellAt(i + x, j + y)) {
                     liveNeighborsCount++;
                 }
             }
         }
-        return liveNeighborsCount <= 2;
+
+        return liveNeighborsCount;
+    }
+
+
+    checkNeighborsForSpawn(cell, spawnLocationsChecked){
+
+        let spawns = [];
+        for (let x = -1; x <= 1; x++) {
+            for (let y = 1; y >= -1; y--) {
+                if (x === 0 && y === 0)
+                    continue;
+                
+                if(this.cellAt(cell.i + x, cell.j + y))
+                    continue;
+                if(spawnLocationsChecked[[cell.i + x, cell.j + y]]){
+                    console.log("checked");
+                    continue;
+                }
+                let live = this.countLiveNeighborsAt(cell.i + x, cell.j + y);
+                if(live === 3)
+                    spawns.push([cell.i + x, cell.j + y]);
+                spawnLocationsChecked[[cell.i + x, cell.j + y]] = true;
+            }
+        }
+
+        return spawns;
     }
 
 }
