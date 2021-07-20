@@ -39,11 +39,25 @@ const gui = new LifeGui({
         lifeEnv.toggleRun();
     },
 
-    speedChanged: function(val){
+    speedChanged: function (val) {
         console.log("speed change");
         lifeEnv.deltaTime = val;
     }
 });
+
+
+//
+for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+        for (let k = 0; k < 3; k++) {
+
+            let cell = lifeEnv.createCell({ i: i, j: j, k: k });
+            lifeEnv.setCellAt({i: i, j: j, k: k}, cell);
+
+        }
+    }
+}
+//
 
 const animate = function () {
 

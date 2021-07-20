@@ -25,45 +25,43 @@ class LifeEnvironment {
 
     toggleCellAt(point) {
 
-        if (point.z > DELTA_Z)
-            return;
-
         let cellOrdinalX = Math.floor(point.x / this.cubeStep);
         let cellOrdinalY = Math.floor(point.y / this.cubeStep);
+        let cellOrdinalZ = Math.floor(point.z / this.cubeStep);
 
         var existing;
-        if (existing = this.cellAt(cellOrdinalX, cellOrdinalY)) {
+        if (existing = this.cellAt(cellOrdinalX, cellOrdinalY, cellOrdinalZ)) {
             this.resetCell(existing);
         }
         else {
-            let cell = this.createCell(cellOrdinalX, cellOrdinalY);
-            this.setCellAt(cellOrdinalX, cellOrdinalY, cell);
+            let cell = this.createCell({ i: cellOrdinalX, j: cellOrdinalY, k: cellOrdinalZ });
+            this.setCellAt({ i: cellOrdinalX, j: cellOrdinalY, k: cellOrdinalZ }, cell);
         }
     }
 
-    createCell(cellOrdinalX, cellOrdinalY) {
+    createCell(discretePoint) {
         let cubePosition = new THREE.Vector3(
-            (this.cubeStep / 2) + (this.cubeStep * cellOrdinalX),
-            (this.cubeStep / 2) + (this.cubeStep * cellOrdinalY),
-            0);
+            (this.cubeStep / 2) + (this.cubeStep * discretePoint.i),
+            (this.cubeStep / 2) + (this.cubeStep * discretePoint.j),
+            (this.cubeStep / 2) + (this.cubeStep * discretePoint.k));
 
         let geom = new THREE.BoxGeometry(this.cubeStep);
         let cubeMesh = new THREE.Mesh(geom, this.cubeMaterial);
         cubeMesh.position.set(cubePosition.x, cubePosition.y, cubePosition.z);
         this.scene.add(cubeMesh);
 
-        let cell = { i: cellOrdinalX, j: cellOrdinalY, cube: cubeMesh, type: 'cell' };
+        let cell = { i: discretePoint.i, j: discretePoint.j, k: discretePoint.k, cube: cubeMesh, type: 'cell' };
         return cell;
     }
 
-    cellAt(i, j) {
+    cellAt(i, j, k) {
 
-        return this.cells[[i, j]];
+        return this.cells[[i, j, k]];
     }
 
-    setCellAt(i, j, cell) {
+    setCellAt(discretePoint, cell) {
 
-        this.cells[[i, j]] = cell;
+        this.cells[[discretePoint.i, discretePoint.j, discretePoint.k]] = cell;
         this.cells.length += 1;
     }
 
@@ -73,7 +71,7 @@ class LifeEnvironment {
             return;
         }
         this.scene.remove(cell.cube);
-        delete this.cells[[cell.i, cell.j]];
+        delete this.cells[[cell.i, cell.j, cell.k]];
         this.cells.length -= 1;
         cell.alreadyRemoved = true;
     }
@@ -115,9 +113,11 @@ class LifeEnvironment {
         for (let i = 0; i < aboutToDie.length; i++) {
             this.resetCell(aboutToDie[i]);
         }
-        for(let i = 0; i < spawns.length; i++){
-            let newCell = this.createCell(...spawns[i]);
-            this.setCellAt(newCell.i, newCell.j, newCell);
+        for (let i = 0; i < spawns.length; i++) {
+            console.log("the new spawn:", spawns[i])
+            let newCell = this.createCell({i: spawns[i][0], j: spawns[i][1], k: spawns[i][2]});
+            console.log("new cell ", newCell);
+            this.setCellAt({i: newCell.i, j: newCell.j, k: newCell.k}, newCell);
         }
     }
 
@@ -126,25 +126,28 @@ class LifeEnvironment {
         if (!cell || !cell.type === 'cell')
             return false;
 
-        let liveNeighborsCount = this.countLiveNeighborsAt(cell.i, cell.j);
-        return liveNeighborsCount < 2 || liveNeighborsCount > 3;
+        let liveNeighborsCount = this.countLiveNeighborsAt(cell.i, cell.j, cell.k);
+        return liveNeighborsCount < 5 || liveNeighborsCount > 14;
     }
 
-    shouldSpawnAt(i, j){
-        let liveNeighborsCount = this.countLiveNeighborsAt(i, j);
-        return liveNeighborsCount === 3;
-    }
+    // shouldSpawnAt(i, j, k) {
+    //     let liveNeighborsCount = this.countLiveNeighborsAt(i, j, k);
+    //     console.log("should spawn? nr = ", liveNeighborsCount);
+    //     return liveNeighborsCount > 7 && liveNeighborsCount < 14;
+    // }
 
-    countLiveNeighborsAt(i, j){
+    countLiveNeighborsAt(i, j, k) {
 
         let liveNeighborsCount = 0;
 
         for (let x = -1; x <= 1; x++) {
             for (let y = 1; y >= -1; y--) {
-                if (x === 0 && y === 0)
-                    continue;
-                if (this.cellAt(i + x, j + y)) {
-                    liveNeighborsCount++;
+                for (let z = -1; z <= 1; z++) {
+                    if (x === 0 && y === 0 && k === 0)
+                        continue;
+                    if (this.cellAt(i + x, j + y, k + z)) {
+                        liveNeighborsCount++;
+                    }
                 }
             }
         }
@@ -153,23 +156,27 @@ class LifeEnvironment {
     }
 
 
-    checkNeighborsForSpawn(cell, spawnLocationsChecked){
+    checkNeighborsForSpawn(cell, spawnLocationsChecked) {
 
         let spawns = [];
         for (let x = -1; x <= 1; x++) {
             for (let y = 1; y >= -1; y--) {
-                if (x === 0 && y === 0)
-                    continue;
-                
-                if(this.cellAt(cell.i + x, cell.j + y))
-                    continue;
-                if(spawnLocationsChecked[[cell.i + x, cell.j + y]]){
-                    continue;
+                for (let z = -1; z <= 1; z++) {
+                    if (x === 0 && y === 0 && z === 0)
+                        continue;
+
+                    if (this.cellAt(cell.i + x, cell.j + y, cell.k + z))
+                        continue;
+                    if (spawnLocationsChecked[[cell.i + x, cell.j + y, cell.k + z]]) {
+                        continue;
+                    }
+                    let live = this.countLiveNeighborsAt(cell.i + x, cell.j + y, cell.k + z);
+                    if (live > 7 && live < 14){
+                        console.log("should spawn? nr = ", live);
+                        spawns.push([cell.i + x, cell.j + y, cell.k + z]);
+                    }
+                    spawnLocationsChecked[[cell.i + x, cell.j + y, cell.k + z]] = true;
                 }
-                let live = this.countLiveNeighborsAt(cell.i + x, cell.j + y);
-                if(live === 3)
-                    spawns.push([cell.i + x, cell.j + y]);
-                spawnLocationsChecked[[cell.i + x, cell.j + y]] = true;
             }
         }
 
@@ -177,10 +184,10 @@ class LifeEnvironment {
     }
 
     toggleRun() {
-        if(this.clock.running){
+        if (this.clock.running) {
             this.clock.stop();
         }
-        else{
+        else {
             this.clock = new THREE.Clock();
             this.lastGenerationTick = 0;
             this.clock.start();
