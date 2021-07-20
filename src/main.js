@@ -22,13 +22,6 @@ const CUBE_STEP = 1;
 const grid = new Grid(CUBE_STEP, 100);
 grid.addGridTo(scene);
 
-// const geometry = new THREE.BoxGeometry();
-// const cMaterial = new THREE.MeshPhongMaterial({ color: 0x22ff44 });
-// const cube = new THREE.Mesh(geometry, cMaterial);
-// cube.position.x = .5;
-// cube.position.y = .5;
-// scene.add(cube);
-
 let controls = new TrackballControls(camera, renderer.domElement);
 
 const raycaster = new THREE.Raycaster();
@@ -44,6 +37,11 @@ const gui = new LifeGui({
     toggleRun: function () {
         running = !running;
         lifeEnv.toggleRun();
+    },
+
+    speedChanged: function(val){
+        console.log("speed change");
+        lifeEnv.deltaTime = val;
     }
 });
 

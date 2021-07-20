@@ -8,6 +8,7 @@ class LifeEnvironment {
 
     constructor(lifeScene, cubeStep) {
 
+        this.deltaTime = DELTA;
         this.scene = lifeScene;
         this.cubeStep = cubeStep;
 
@@ -80,9 +81,9 @@ class LifeEnvironment {
     evolveNextGeneration() {
 
         let tick = this.clock.getElapsedTime() * 1000;
-        if (tick > this.lastGenerationTick + DELTA) {
+        if (tick > this.lastGenerationTick + this.deltaTime) {
 
-            this.lastGenerationTick = this.lastGenerationTick + DELTA;
+            this.lastGenerationTick = this.lastGenerationTick + this.deltaTime;
             this.evolveNextGenerationStep();
         }
     }

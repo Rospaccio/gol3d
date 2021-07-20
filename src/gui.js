@@ -6,13 +6,15 @@ class LifeGui {
 
         this.callbacks = callbacks;
         this.controller = {
-            'run': false
+            'Run': false,
+            'Time Interval': 200
         }
 
         this.gui = new gui.GUI();
         let exFolder = this.gui.addFolder("Execution")
 
-        exFolder.add(this.controller, 'run', 0, 1).onChange(val => this.callbacks.toggleRun());
+        exFolder.add(this.controller, 'Run', 0, 1).onChange(val => this.callbacks.toggleRun());
+        exFolder.add(this.controller, 'Time Interval', 50, 1000, 1).listen().onChange(val => this.callbacks.speedChanged(val));
     }
 }
 
