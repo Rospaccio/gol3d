@@ -46,7 +46,12 @@ class LifeEnvironment {
             (this.cubeStep / 2) + (this.cubeStep * discretePoint.k));
 
         let geom = new THREE.BoxGeometry(this.cubeStep);
-        let cubeMesh = new THREE.Mesh(geom, this.cubeMaterial);
+        let cubeMesh = new THREE.Mesh(geom, this.cubeMaterial.clone());
+
+        // let matrix = new THREE.Matrix4();
+        // matrix.position = new THREE.Vector3(cubePosition.x, cubePosition.y, cubePosition.z)
+        // cubeMesh.setMatrixAt(this.cells.length + 1, matrix);
+
         cubeMesh.position.set(cubePosition.x, cubePosition.y, cubePosition.z);
         this.scene.add(cubeMesh);
 
@@ -81,9 +86,11 @@ class LifeEnvironment {
         let tick = this.clock.getElapsedTime() * 1000;
         if (tick > this.lastGenerationTick + this.deltaTime) {
 
-            this.lastGenerationTick = this.lastGenerationTick + this.deltaTime;
             this.evolveNextGenerationStep();
+            this.lastGenerationTick = this.lastGenerationTick + Math.max(this.deltaTime, (this.clock.getElapsedTime() * 1000 - tick));
         }
+
+        this.updateScene();
     }
 
     evolveNextGenerationStep() {
@@ -127,7 +134,7 @@ class LifeEnvironment {
             return false;
 
         let liveNeighborsCount = this.countLiveNeighborsAt(cell.i, cell.j, cell.k);
-        return liveNeighborsCount < 5 || liveNeighborsCount > 14;
+        return liveNeighborsCount < 2 || liveNeighborsCount > 2;
     }
 
     // shouldSpawnAt(i, j, k) {
@@ -171,7 +178,7 @@ class LifeEnvironment {
                         continue;
                     }
                     let live = this.countLiveNeighborsAt(cell.i + x, cell.j + y, cell.k + z);
-                    if (live > 7 && live < 14){
+                    if (live === 3){ //live > 3 && live < 5){
                         console.log("should spawn? nr = ", live);
                         spawns.push([cell.i + x, cell.j + y, cell.k + z]);
                     }
@@ -192,6 +199,10 @@ class LifeEnvironment {
             this.lastGenerationTick = 0;
             this.clock.start();
         }
+    }
+
+    updateScene() {
+        
     }
 }
 

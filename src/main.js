@@ -47,13 +47,13 @@ const gui = new LifeGui({
 
 
 //
-for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 3; j++) {
-        for (let k = 0; k < 3; k++) {
-
-            let cell = lifeEnv.createCell({ i: i, j: j, k: k });
-            lifeEnv.setCellAt({i: i, j: j, k: k}, cell);
-
+for (let i = 0; i < 5; i++) {
+    for (let j = 0; j < 5; j++) {
+        for (let k = 0; k < 5; k++) {
+            if ((i + j + k) % 2 === 0) {
+                let cell = lifeEnv.createCell({ i: i, j: j, k: k });
+                lifeEnv.setCellAt({ i: i, j: j, k: k }, cell);
+            }
         }
     }
 }
