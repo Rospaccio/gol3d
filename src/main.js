@@ -57,6 +57,7 @@ for (let i = 0; i < 5; i++) {
         }
     }
 }
+lifeEnv.updateScene();
 //
 
 const animate = function () {

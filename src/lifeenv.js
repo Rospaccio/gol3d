@@ -45,17 +45,7 @@ class LifeEnvironment {
             (this.cubeStep / 2) + (this.cubeStep * discretePoint.j),
             (this.cubeStep / 2) + (this.cubeStep * discretePoint.k));
 
-        let geom = new THREE.BoxGeometry(this.cubeStep);
-        let cubeMesh = new THREE.Mesh(geom, this.cubeMaterial.clone());
-
-        // let matrix = new THREE.Matrix4();
-        // matrix.position = new THREE.Vector3(cubePosition.x, cubePosition.y, cubePosition.z)
-        // cubeMesh.setMatrixAt(this.cells.length + 1, matrix);
-
-        cubeMesh.position.set(cubePosition.x, cubePosition.y, cubePosition.z);
-        this.scene.add(cubeMesh);
-
-        let cell = { i: discretePoint.i, j: discretePoint.j, k: discretePoint.k, cube: cubeMesh, type: 'cell' };
+        let cell = { i: discretePoint.i, j: discretePoint.j, k: discretePoint.k, cubePosition: cubePosition, type: 'cell' };
         return cell;
     }
 
@@ -75,7 +65,6 @@ class LifeEnvironment {
         if (cell.alreadyRemoved) {
             return;
         }
-        this.scene.remove(cell.cube);
         delete this.cells[[cell.i, cell.j, cell.k]];
         this.cells.length -= 1;
         cell.alreadyRemoved = true;
@@ -122,9 +111,9 @@ class LifeEnvironment {
         }
         for (let i = 0; i < spawns.length; i++) {
             console.log("the new spawn:", spawns[i])
-            let newCell = this.createCell({i: spawns[i][0], j: spawns[i][1], k: spawns[i][2]});
+            let newCell = this.createCell({ i: spawns[i][0], j: spawns[i][1], k: spawns[i][2] });
             console.log("new cell ", newCell);
-            this.setCellAt({i: newCell.i, j: newCell.j, k: newCell.k}, newCell);
+            this.setCellAt({ i: newCell.i, j: newCell.j, k: newCell.k }, newCell);
         }
     }
 
@@ -178,7 +167,7 @@ class LifeEnvironment {
                         continue;
                     }
                     let live = this.countLiveNeighborsAt(cell.i + x, cell.j + y, cell.k + z);
-                    if (live === 3){ //live > 3 && live < 5){
+                    if (live === 3) { //live > 3 && live < 5){
                         console.log("should spawn? nr = ", live);
                         spawns.push([cell.i + x, cell.j + y, cell.k + z]);
                     }
@@ -202,7 +191,67 @@ class LifeEnvironment {
     }
 
     updateScene() {
-        
+
+        this.cleanScene();
+
+        let geometry = new THREE.BoxGeometry(this.cubeStep);
+        let cubeMesh = new THREE.InstancedMesh(geometry, this.cubeMaterial.clone(), this.cells.length);
+        let matrix = new THREE.Matrix4();
+
+        let i = 0;
+        for (let key in this.cells) {
+            let cell = this.cells[key];
+            if(!cell.type || cell.type !== 'cell'){
+                continue;
+            }
+            
+            // --- Matrix 4
+            const position = new THREE.Vector3();
+            const rotation = new THREE.Euler();
+            const quaternion = new THREE.Quaternion();
+            const scale = new THREE.Vector3();
+
+            position.x = cell.cubePosition.x;
+            position.y = cell.cubePosition.y;
+            position.z = cell.cubePosition.z;
+
+            rotation.x = 0;
+            rotation.y = 0;
+            rotation.z = 0;
+
+            quaternion.setFromEuler(rotation);
+
+            scale.x = scale.y = scale.z = 1;
+
+            matrix.compose(position, quaternion, scale);
+
+            // ---
+
+            cubeMesh.setMatrixAt(i++, matrix);
+            // cubeMesh.position.set(cell.cubePosition.x, cell.cubePosition.y, cell.cubePosition.z);
+        }
+
+        this.scene.add(cubeMesh);
+    }
+
+    cleanScene() {
+
+        const meshes = [];
+
+        this.scene.traverse(function (object) {
+            if (object.isMesh) meshes.push(object);
+        });
+
+        for (let i = 0; i < meshes.length; i++) {
+
+            const mesh = meshes[i];
+            mesh.material.dispose();
+            mesh.geometry.dispose();
+
+            this.scene.remove(mesh);
+
+        }
+
     }
 }
 
